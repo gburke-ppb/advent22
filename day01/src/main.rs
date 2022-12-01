@@ -4,6 +4,31 @@ pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Result<T> = std::result::Result<T, Error>;
 
 pub fn main() -> Result<()> {
+  part2();
+  Ok(())
+}
+
+fn part1() {
+  let mut max = 0;
+  let mut calories = 0;
+
+  for input in io::stdin().lines() {
+    if let Ok(line) = input {
+      if line.eq("") {
+        if calories > max {
+          max = calories;
+        }
+        calories = 0;
+      } else {
+        let x: i32 = line.trim().parse().expect("Input not an integer");
+        calories += x;
+      }
+    }
+  }
+  println!("{}", max);
+}
+
+fn part2() {
   let mut maxes = [0, 0, 0];
   let mut calories = 0;
 
@@ -34,5 +59,4 @@ pub fn main() -> Result<()> {
     maxes[2],
     maxes[0] + maxes[1] + maxes[2]
   );
-  Ok(())
 }
