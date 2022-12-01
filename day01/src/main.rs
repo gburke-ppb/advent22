@@ -1,18 +1,24 @@
-use std::io;
+use std::{
+  env,
+  fs::File,
+  io::{BufRead, BufReader},
+};
 
-pub type Error = Box<dyn std::error::Error + Send + Sync>;
-pub type Result<T> = std::result::Result<T, Error>;
+pub fn main(){
+  let args: Vec<String> = env::args().collect();
+  let filename = &args[1];
 
-pub fn main() -> Result<()> {
-  part2();
-  Ok(())
+  part1(&filename);
+  part2(&filename);
 }
 
-fn part1() {
+fn part1(filename: &String) {
   let mut max = 0;
   let mut calories = 0;
 
-  for input in io::stdin().lines() {
+  let infile = BufReader::new(File::open(filename).expect("Can't open that file"));
+
+  for input in infile.lines() {
     if let Ok(line) = input {
       if line.eq("") {
         if calories > max {
@@ -25,14 +31,16 @@ fn part1() {
       }
     }
   }
-  println!("{}", max);
+  println!("Part one answer is: {}", max);
 }
 
-fn part2() {
+fn part2(filename: &String) {
   let mut maxes = [0, 0, 0];
   let mut calories = 0;
 
-  for input in io::stdin().lines() {
+  let infile = BufReader::new(File::open(filename).expect("Can't open that file"));
+
+  for input in infile.lines() {
     if let Ok(line) = input {
       if line.eq("") {
         if calories > maxes[0] {
@@ -53,7 +61,7 @@ fn part2() {
     }
   }
   println!(
-    "{} + {} + {} = {}",
+    "Part two answer is ({} + {} + {}): {}",
     maxes[0],
     maxes[1],
     maxes[2],
