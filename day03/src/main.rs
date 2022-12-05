@@ -30,12 +30,10 @@ fn decode_char(character: char) -> u32 {
     ret = 0;
   }
 
-  // println!("Returning {character}={ret}");
-
   ret
 }
 
-fn encode_char(mut num: i64) -> u32 {
+fn encode_char(mut num: u64) -> u32 {
   let mut val: u32 = 0;
   while num > 1 {
     if num != 1 {
@@ -43,21 +41,6 @@ fn encode_char(mut num: i64) -> u32 {
     }
     num = num >> 1;
   }
-  // if val >= 1 && val <= 26 {
-  //   println!(
-  //     "dup character is {} = {}",
-  //     char::from_u32((val) + 'a' as u32).unwrap(),
-  //     val
-  //   );
-  // } else if val >= 27 && val <= 52 {
-  //   println!(
-  //     "dup character is {} = {}",
-  //     char::from_u32((val - 26) + 'A' as u32).unwrap(),
-  //     val
-  //   );
-  // } else {
-  //   dbg!("dup character is unknown");
-  // }
   val
 }
 
@@ -69,8 +52,8 @@ fn parse_string(str: &String) -> u32 {
   let mut left = binding.chars();
   let mut right = the_string.chars();
 
-  let mut l: i64 = 0;
-  let mut r: i64 = 0;
+  let mut l: u64 = 0;
+  let mut r: u64 = 0;
   for _ in 0..len {
     l |= 1 << decode_char(left.next().unwrap());
     r |= 1 << decode_char(right.next().unwrap());
@@ -85,19 +68,41 @@ fn part1(filename: &String) {
   let mut score: u32 = 0;
   for input in infile.lines() {
     if let Ok(line) = input {
-      // println!("Input line: {line}");
       score += parse_string(&line);
     }
   }
   println!("Part one: Total score = {score}");
 }
 
+fn parse_line(line: &String) -> u64 {
+  let chars = line.chars();
+
+  let mut r: u64 = 0;
+  for c in chars {
+    r |= 1 << decode_char(c);
+  }
+  r
+}
+
 fn part2(filename: &String) {
   let infile = BufReader::new(File::open(filename).expect("Can't open that file"));
 
+  let mut count = 0;
+
+  let mut pattern: [u64; 3] = [0; 3];
+
+  let mut sum = 0;
+
   for input in infile.lines() {
-    if let Ok(line) = input {}
+    if let Ok(line) = input {
+      pattern[count] = parse_line(&line);
+      count += 1;
+      if count == 3 {
+        let dup = pattern[0] & pattern[1] & pattern[2];
+        sum += encode_char(dup);
+        count = 0;
+      }
+    }
   }
-  let score = 0;
-  println!("Part two: Total score = {score}");
+  println!("Part two: Total score = {sum}");
 }
