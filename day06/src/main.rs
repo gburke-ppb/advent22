@@ -23,24 +23,12 @@ fn test_chars(input: &[char]) -> bool {
   true
 }
 
-fn find_marker(str: &String) -> u32 {
+fn find_marker(str: &String, marker_size: usize) -> u32 {
   let chars: Vec<char> = str.chars().collect();
   let mut result: u32 = 0;
-  for i in 0..(str.len() - 4) {
-    if test_chars(&chars[i..i + 4]) {
-      result = i as u32 + 4;
-      break;
-    }
-  }
-  result
-}
-
-fn find_message(str: &String) -> u32 {
-  let chars: Vec<char> = str.chars().collect();
-  let mut result: u32 = 0;
-  for i in 0..(str.len() - 14) {
-    if test_chars(&chars[i..i + 14]) {
-      result = i as u32 + 14;
+  for i in 0..(str.len() - marker_size) {
+    if test_chars(&chars[i..i + marker_size]) {
+      result = i as u32 + marker_size as u32;
       break;
     }
   }
@@ -53,7 +41,7 @@ fn part1(filename: &String) {
   let mut marker: u32 = 0;
   while let Some(input) = lines.next() {
     if let Ok(line) = input {
-      marker = find_marker(&line);
+      marker = find_marker(&line, 4);
     }
   }
 
@@ -66,7 +54,7 @@ fn part2(filename: &String) {
   let mut message: u32 = 0;
   while let Some(input) = lines.next() {
     if let Ok(line) = input {
-      message = find_message(&line);
+      message = find_marker(&line, 14);
     }
   }
 
