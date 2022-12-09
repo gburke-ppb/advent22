@@ -5,6 +5,58 @@ use std::{
   io::{BufRead, BufReader},
 };
 
+fn pull_tail(head: (i32, i32), tail: (i32, i32)) -> (i32, i32) {
+  if head.0.abs_diff(tail.0) > 1 && head.1.abs_diff(tail.1) > 1 {
+    return ((head.0 - tail.0) / 2, (head.1 - tail.1) / 2);
+  }
+  if head.0.abs_diff(tail.0) > 1 {
+    return ((head.0 - tail.0) / 2, (head.1 - tail.1));
+  }
+  if head.1.abs_diff(tail.1) > 1 {
+    return (head.0 - tail.0, (head.1 - tail.1) / 2);
+  }
+  (0, 0)
+}
+
+fn run_calculation(filename: &String, num_knots: usize) {
+  let infile = BufReader::new(File::open(filename).expect("Can't open that file"));
+  let mut lines = infile.lines();
+
+  let mut knots: Vec<(i32, i32)> = Vec::new();
+  for _ in 0..num_knots {
+    knots.push((0, 0));
+  }
+
+  let mut grid: HashMap<(i32, i32), bool> = HashMap::new();
+  grid.insert(knots[0], true);
+
+  while let Some(input) = lines.next() {
+    if let Ok(line) = input {
+      let v: Vec<&str> = line.split(" ").collect();
+      let dir = v[0];
+      let num: i32 = v[1].parse().unwrap();
+      for _ in 0..num {
+        match dir {
+          "U" => knots[0] = (knots[0].0, knots[0].1 + 1),
+          "D" => knots[0] = (knots[0].0, knots[0].1 - 1),
+          "R" => knots[0] = (knots[0].0 + 1, knots[0].1),
+          "L" => knots[0] = (knots[0].0 - 1, knots[0].1),
+          s => println!("Unknown movement {s}"),
+        }
+
+        for x in 0..num_knots - 1 {
+          let delta = pull_tail(knots[x], knots[x + 1]);
+          knots[x + 1] = (knots[x + 1].0 + delta.0, knots[x + 1].1 + delta.1);
+          if x == num_knots - 2 {
+            grid.insert(knots[x + 1], true);
+          }
+        }
+      }
+    }
+  }
+  println!("Answer for {} knots = {}", num_knots, grid.len());
+}
+
 pub fn main() {
   let args: Vec<String> = env::args().collect();
   let filename = &args[1];
@@ -13,71 +65,10 @@ pub fn main() {
   part2(&filename);
 }
 
-fn test_move_tail(head: (i32, i32), tail: (i32, i32)) -> bool {
-  if head.0.abs_diff(tail.0) > 1 || head.1.abs_diff(tail.1) > 1 {
-    return true;
-  }
-  false
-}
-
 fn part1(filename: &String) {
-  let infile = BufReader::new(File::open(filename).expect("Can't open that file"));
-  let mut lines = infile.lines();
-
-  let mut h_now: (i32, i32) = (0, 0); // (x,y)
-  let mut h_last: (i32, i32) = (0, 0);
-  let mut t: (i32, i32) = (0, 0);
-  let mut grid: HashMap<(i32, i32), bool> = HashMap::new();
-  grid.insert(t, true);
-
-  while let Some(input) = lines.next() {
-    if let Ok(mut line) = input {
-      let v: Vec<&str> = line.split(" ").collect();
-      let dir = v[0];
-      let num: i32 = v[1].parse().unwrap();
-      for i in 0..num {
-        match dir {
-          "U" => {
-            h_now = (h_now.0, h_now.1 + 1);
-          }
-          "D" => {
-            // y--
-            h_now = (h_now.0, h_now.1 - 1);
-          }
-          "R" => {
-            // x++
-            h_now = (h_now.0 + 1, h_now.1);
-          }
-          "L" => {
-            // y--
-            h_now = (h_now.0 - 1, h_now.1);
-          }
-          s => {
-            println!("Unknown movement {s}");
-          }
-        }
-        if test_move_tail(h_now, t) {
-          t = h_last;
-          grid.insert(t, true);
-        }
-        h_last = h_now;
-      }
-    }
-  }
-
-  // println!("tail visited");
-  // for c in &grid {
-  //   println!("({},{})", c.0.0, c.0.1);
-  // }
-  println!("Part one: answer = {}", grid.len());
+  run_calculation(filename, 2);
 }
 
 fn part2(filename: &String) {
-  let infile = BufReader::new(File::open(filename).expect("Can't open that file"));
-  let mut lines = infile.lines();
-  while let Some(input) = lines.next() {
-    if let Ok(line) = input {}
-  }
-
-  print!("Part two: answer = ");
+  run_calculation(filename, 10);
 }
