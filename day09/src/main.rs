@@ -18,7 +18,7 @@ fn pull_tail(head: (i32, i32), tail: (i32, i32)) -> (i32, i32) {
   (0, 0)
 }
 
-fn run_calculation(filename: &String, num_knots: usize) {
+fn run_simulation(filename: &String, num_knots: usize) {
   let infile = BufReader::new(File::open(filename).expect("Can't open that file"));
   let mut lines = infile.lines();
 
@@ -66,9 +66,9 @@ pub fn main() {
 }
 
 fn part1(filename: &String) {
-  run_calculation(filename, 2);
+  run_simulation(filename, 2);
 }
 
 fn part2(filename: &String) {
-  run_calculation(filename, 10);
+  run_simulation(filename, 10);
 }
