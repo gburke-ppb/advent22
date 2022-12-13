@@ -1,4 +1,3 @@
-use num::{BigInt, Zero, Integer};
 use std::{
   env,
   fs::File,
@@ -26,11 +25,11 @@ fn run_simulation(filename: &String, divisor: usize, rounds: usize) -> usize {
 
   let mut monkey: usize = 0;
   let mut counter: Vec<usize> = Vec::new();
-  let mut items: Vec<Vec<BigInt>> = Vec::new();
+  let mut items: Vec<Vec<u64>> = Vec::new();
   let mut operations: Vec<OperationType> = Vec::new();
-  let mut operation_nums: Vec<BigInt> = Vec::new();
+  let mut operation_nums: Vec<u64> = Vec::new();
   let mut operations_val_is_old: Vec<bool> = Vec::new();
-  let mut test_val: Vec<BigInt> = Vec::new();
+  let mut test_val: Vec<u64> = Vec::new();
   let mut if_true: Vec<usize> = Vec::new();
   let mut if_false: Vec<usize> = Vec::new();
 
@@ -51,7 +50,7 @@ fn run_simulation(filename: &String, divisor: usize, rounds: usize) -> usize {
         while let Some(mut val) = bits.next() {
           let tmp = val.replace(",", "");
           val = tmp.as_str();
-          let i: BigInt = val.parse().unwrap();
+          let i: u64 = val.parse().unwrap();
           items[monkey].push(i);
         }
       }
@@ -70,7 +69,7 @@ fn run_simulation(filename: &String, divisor: usize, rounds: usize) -> usize {
         }
         if val == "old" {
           operations_val_is_old.push(true);
-          operation_nums.push(BigInt::zero());
+          operation_nums.push(0);
         } else {
           operations_val_is_old.push(false);
           operation_nums.push(val.parse().unwrap());
@@ -81,7 +80,7 @@ fn run_simulation(filename: &String, divisor: usize, rounds: usize) -> usize {
         bits.next(); // Test:
         bits.next(); // divisible
         bits.next(); // by
-        let val: BigInt = bits.next().expect("whatever").parse().unwrap();
+        let val: u64 = bits.next().expect("whatever").parse().unwrap();
         test_val.push(val);
       }
       if line.contains("If true") {
@@ -107,6 +106,11 @@ fn run_simulation(filename: &String, divisor: usize, rounds: usize) -> usize {
     }
   }
 
+  let mut modulus = 1;
+  for i in 0..monkey +1 {
+    modulus *= test_val[i];
+  }
+
   for _ in 0..rounds {
     for j in 0..monkey + 1 {
       for x in 0..items[j].len() {
@@ -115,29 +119,24 @@ fn run_simulation(filename: &String, divisor: usize, rounds: usize) -> usize {
         match operations[j] {
           OperationType::Add => {
             if operations_val_is_old[j] {
-              let tmp = current.clone().add(current);
-              current = BigInt::from(tmp);
+              current += current;
             } else {
-              let tmp = current.add(&operation_nums[j]);
-              current = BigInt::from(tmp);
+              current += &operation_nums[j];
             }
           }
           OperationType::Multiply => {
             if operations_val_is_old[j] {
-              let tmp = current.clone().mul(current);
-              current = BigInt::from(tmp);
+              current *= current;
             } else {
-              let tmp = current.mul(&operation_nums[j]);
-              current = BigInt::from(tmp);
+              current *= &operation_nums[j];
             }
           }
         }
-        let tmp=current.div_floor(&BigInt::from(divisor));
-        current = BigInt::from(tmp);
-        if &current % &test_val[j] == BigInt::zero() {
-          items[if_true[j]].push(current);
+        current /= divisor as u64;
+        if &current % &test_val[j] == 0 {
+          items[if_true[j]].push(current % modulus);
         } else {
-          items[if_false[j]].push(current);
+          items[if_false[j]].push(current % modulus);
         }
       }
       items[j] = Vec::new();
