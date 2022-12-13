@@ -2,7 +2,6 @@ use std::{
   env,
   fs::File,
   io::{BufRead, BufReader},
-  ops::{Add, Mul},
 };
 
 pub fn main() {
@@ -141,9 +140,6 @@ fn run_simulation(filename: &String, divisor: usize, rounds: usize) -> usize {
       }
       items[j] = Vec::new();
     }
-    // println!("{:?}", counter);
-    // println!("{:?}", items);
-    // println!("");
   }
 
   counter.sort_by(|a, b| b.cmp(a));
