@@ -20,7 +20,7 @@ fn part1(filename: &String) {
     }
   }
 
-  print!("Part one: answer = ");
+  println!("Part one: answer = ");
 }
 
 fn part2(filename: &String) {
@@ -31,5 +31,5 @@ fn part2(filename: &String) {
     }
   }
 
-  print!("Part two: answer = ");
+  println!("Part two: answer = ");
 }
