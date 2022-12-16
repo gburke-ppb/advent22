@@ -33,9 +33,50 @@ impl Inode {
 pub fn main() {
   let args: Vec<String> = env::args().collect();
   let filename = &args[1];
+  let infile = BufReader::new(File::open(filename).expect("Can't open that file"));
+  let mut lines = infile.lines();
 
-  part1(&filename);
-  part2(&filename);
+  let mut fs: Inode = Inode {
+    name: String::from("/"),
+    itype: InodeType::Dir,
+    size: 0, // if a file, the size of the file.  If a dir, the size of all files and subdirs
+    children: Vec::new(),
+  };
+
+  let mut sum = 0;
+
+  (lines, fs, sum) = parse(lines, fs, 100000, sum);
+
+  // print_fs(&fs);
+
+  println!("Part one: answer = {}", sum);
+
+  let total_space = 70000000;
+  let required_free = 30000000;
+  let used = fs.size;
+  let free = total_space - used;
+  let required = required_free - free;
+
+  println!("We need to free up {}", required);
+
+  let mut answer = total_space;
+  answer = find_the_dir(&fs, required, answer);
+
+  println!("Part two: answer = {answer}");
+}
+
+fn find_the_dir(dir: &Inode, min_size: u64, mut best_fit: u64) -> u64 {
+  let mut iter = dir.children.iter();
+  while let Some(child) = iter.next() {
+    if child.itype == InodeType::Dir {  // we can ignore files for this bit
+      best_fit = find_the_dir(child, min_size, best_fit);
+      if child.size < best_fit && child.size > min_size {
+        best_fit=child.size
+      }
+    }
+  }
+
+  best_fit
 }
 
 fn parse(
@@ -90,36 +131,6 @@ fn parse(
   }
   // println!("cd ..");
   (lines, dir, sum)
-}
-
-fn part1(filename: &String) {
-  let infile = BufReader::new(File::open(filename).expect("Can't open that file"));
-  let mut lines = infile.lines();
-
-  let mut fs: Inode = Inode {
-    name: String::from("/"),
-    itype: InodeType::Dir,
-    size: 0, // if a file, the size of the file.  If a dir, the size of all files and subdirs
-    children: Vec::new(),
-  };
-
-  let mut sum = 0;
-
-  (lines, fs, sum) = parse(lines, fs, 100000, sum);
-
-  // print_fs(&fs);
-
-  println!("Part one: answer = {}", sum);
-}
-
-fn part2(filename: &String) {
-  let infile = BufReader::new(File::open(filename).expect("Can't open that file"));
-  let mut lines = infile.lines();
-  while let Some(input) = lines.next() {
-    if let Ok(line) = input {}
-  }
-
-  println!("Part two: answer = ");
 }
 
 fn print_fs(fs: &Inode) {
