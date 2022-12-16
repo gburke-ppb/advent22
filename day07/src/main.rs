@@ -1,9 +1,10 @@
 use std::{
   env,
   fs::File,
-  io::{BufRead, BufReader},
+  io::{BufRead, BufReader, Lines},
 };
 
+#[derive(PartialEq)]
 enum InodeType {
   Dir,
   File,
@@ -17,16 +18,6 @@ struct Inode {
 }
 
 impl Inode {
-  fn add_dir(&mut self, dirname: &String) {
-    let node = Inode {
-      name: String::from(dirname),
-      itype: InodeType::Dir,
-      size: 0,
-      children: Vec::new(),
-    };
-    self.children.push(node);
-  }
-
   fn add_file(&mut self, filename: &str, size: u64) {
     let node = Inode {
       name: String::from(filename),
@@ -47,6 +38,60 @@ pub fn main() {
   part2(&filename);
 }
 
+fn parse(
+  mut lines: Lines<BufReader<File>>,
+  mut dir: Inode,
+  limit: u64,
+  mut sum: u64
+) -> (Lines<BufReader<File>>, Inode, u64) {
+  // println!("parse {}", dir.name);
+  while let Some(input) = lines.next() {
+    if let Ok(mut line) = input {
+      // println!("  [{}]", line);
+      if line.starts_with("$ ") {
+        let mut command = line.split_off(2);
+        if command.starts_with("cd ") {
+          let dirname = command.split_off(3);
+          if dirname == ".." {
+            break;
+          } else if dirname == "/" {
+            // ignore -- we assume we are starting with `cd /`
+            continue;
+          } else {
+            let mut new_dir = Inode {
+              name: String::from(dirname),
+              itype: InodeType::Dir,
+              size: 0,
+              children: Vec::new(),
+            };
+            (lines, new_dir, sum) = parse(lines, new_dir, limit, sum);
+            if new_dir.size < limit {
+              sum += new_dir.size;
+            }
+            dir.size += new_dir.size;
+            dir.children.push(new_dir);
+          }
+        } else if command.starts_with("ls") {
+          continue;
+        }
+      } else if line.starts_with("dir") {
+        // ignore -- we add the directory on a `cd`
+        continue;
+      } else {
+        // it starts with a number.
+        let strings: Vec<_> = line.split(" ").collect();
+        let str_size = strings[0];
+        let filename = strings[1];
+        let size: u64 = str_size.parse().unwrap();
+        // println!("Adding file {} to dir {}", filename, dir.name);
+        dir.add_file(filename, size);
+      }
+    }
+  }
+  // println!("cd ..");
+  (lines, dir, sum)
+}
+
 fn part1(filename: &String) {
   let infile = BufReader::new(File::open(filename).expect("Can't open that file"));
   let mut lines = infile.lines();
@@ -58,40 +103,13 @@ fn part1(filename: &String) {
     children: Vec::new(),
   };
 
-  while let Some(input) = lines.next() {
-    if let Ok(mut line) = input {
-      if line.starts_with("$ ") {
-        let mut command = line.split_off(2);
-        if command.starts_with("cd ") {
-          let dirname = command.split_off(3);
-          if dirname == ".." {
+  let mut sum = 0;
 
-          } else if dirname == "/" {
+  (lines, fs, sum) = parse(lines, fs, 100000, sum);
 
-          } else {
+  // print_fs(&fs);
 
-          }
-        } else if command.starts_with("ls") {
-          continue;
-        }
-
-      } else if line.starts_with("dir") {
-        //
-        let dirname = line.split_off(4);
-        // something.add_dir(&dirname);
-      } else {
-        // it starts with a number.
-        let strings: Vec<_> = line.split(" ").collect();
-        let str_size = strings[0];
-        let filename = strings[1];
-        let size: usize = str_size.parse().unwrap();
-
-        // something.add_file(&filename, size);
-      }
-    }
-  }
-
-  print!("Part one: answer = ");
+  println!("Part one: answer = {}", sum);
 }
 
 fn part2(filename: &String) {
@@ -101,5 +119,34 @@ fn part2(filename: &String) {
     if let Ok(line) = input {}
   }
 
-  print!("Part two: answer = ");
+  println!("Part two: answer = ");
+}
+
+fn print_fs(fs: &Inode) {
+  println!("/ ({})", fs.size);
+  print_dir(&fs, 2);
+}
+
+fn print_dir(dir: &Inode, indent: usize) {
+  let mut iter = dir.children.iter();
+  while let Some(child) = iter.next() {
+    if child.itype == InodeType::Dir {
+      println!(
+        "{s:>width$} - {val} (dir: {size})",
+        s = " ",
+        width = indent,
+        val = child.name,
+        size = child.size
+      );
+      print_dir(&child, indent + 1);
+    } else {
+      println!(
+        "{s:>width$} - {val} (file: {size})",
+        s = " ",
+        width = indent,
+        size = child.size,
+        val = child.name
+      );
+    }
+  }
 }
