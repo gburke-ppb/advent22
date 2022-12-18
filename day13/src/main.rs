@@ -148,6 +148,7 @@ fn compare_lists(left: &Vec<Node>, right: &Vec<Node>) -> bool {
 
   if left.len() == 0 || right.len() == 0 {
     ret = true;
+    
   } else {
     for n in 0..left.len() {
       if n < right.len() {
